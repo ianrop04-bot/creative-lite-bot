@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CH - Pairing Code</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg: #000000;
+      --bg-op: #242427;
+      --gap: 8px;
+      --color: white;
+      --sec-col: #0188FF;
+      --btn-col: #FFFFFF;
+      --border: 15px;
+    }
+    
+    body {
+      background: var(--bg);
+      color: var(--color);
+      scroll-behavior: smooth;
+    }
+    
+    .con {
+      background: var(--bg-op);
+      margin: 10px;
+      padding: 20px;
+      border-radius: 15px;
+    }
+    
+    input {
+      background: none;
+      outline: none;
+      border: none;
+      color: rgba(0, 155, 255, 1);
+      width: 100%;
+    }
+    
+    .holder {
+      background: var(--bg);
+      display: flex;
+      padding: 15px;
+      margin: 10px;
+      border-radius: 10px;
+      gap: 10px;
+    }
+    
+    .holder:hover {
+      box-shadow: 0px 12px 10px #00C3FF;
+    }
+    
+    .btn {
+      margin: 10px;
+      padding: 20px;
+      border-radius: 20px;
+      border: none;
+      background: rgba(0, 150, 255, 1);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .btn:active {
+      background: rgba(0, 91, 255, 1);
+    }
+    
+    .con h2 {
+      text-shadow: 0 0 10px #00B0FF, 0 0 20px #00B0FF, 0 0 30px #00B0FF;
+    }
+    
+    .highlighted {
+      backdrop-filter: blur(20px);
+      padding: 5px;
+      margin: 5px;
+      border-radius: 15px;
+      box-shadow: inset 0px 0px 20px #00FF4D;
+      color: white;
+    }
+    
+    .codeDiv {
+      border-left: 8px dashed #0080FF;
+      background: var(--bg-op);
+      margin: 10px;
+      padding: 20px;
+      border-radius: 20px;
+      display: none;
+    }
+    
+    .codeDiv h2 {
+      font-size: 32px;
+      letter-spacing: 4px;
+      cursor: pointer;
+    }
+    
+    .error {
+      color: #ff6b6b;
+    }
+    
+    .success {
+      color: #51cf66;
+    }
+  </style>
+</head>
+
+<body>
+  <center>
+    <div class="con">
+      <h2><div class="icon"><i class="fas fa-code"></i></div>CH-WEB-SYSTEM</h2>
+      <p class="highlighted"><i class="fab fa-whatsapp"></i> Enter Your WhatsApp Number</p>
+      
+      <div class="holder">
+        <i class="fas fa-phone"></i>
+        <input type="tel" placeholder="Enter WhatsApp number" id="input">
+      </div>
+      <p id="p"></p><br />
+      <button id="pairBtn" class="btn">PAIRING CODE</button>
+      <div class="codeDiv" id="codeDiv">
+        <h2 id="code" onclick="copyCode()">-</h2>
+        <p style="color:lightgreen;">Tap To Copy</p>
+      </div>
+    </div>
+  </center>
+  
+  <script>
+    const inputField = document.getElementById('input');
+    const btn = document.getElementById('pairBtn');
+    const codeDiv = document.getElementById('codeDiv');
+    const codeElement = document.getElementById('code');
+    const messageP = document.getElementById('p');
+    
+    function showMessage(content, isError = true) {
+      messageP.textContent = content;
+      messageP.style.color = isError ? '#ff6b6b' : '#51cf66';
+      setTimeout(() => {
+        messageP.textContent = '';
+      }, 5000);
+    }
+    
+    function copyCode() {
+      const code = codeElement.textContent;
+      if (code && code !== '-') {
+        navigator.clipboard.writeText(code);
+        showMessage('✅ Code copied!', false);
+      }
+    }
+    
+    btn.addEventListener('click', async () => {
+      const input = inputField.value.trim();
+      
+      if (!input) {
+        showMessage('❌ Please enter your WhatsApp number');
+        return;
+      }
+      
+      // Validate phone number length
+      if (input.length < 10 || input.length > 15) {
+        showMessage('❌ Phone number must be 10-15 digits');
+        return;
+      }
+      
+      const cleanedNUM = input.replace(/\D/g, '');
+      
+      btn.disabled = true;
+      btn.textContent = '⏳ REQUESTING...';
+      
+      try {
+        // Fix: Use cleanedNUM, not input
+        const response = await axios.get(`/code?number=${cleanedNUM}`);
+        const code = response.data.code || '❌ Something went wrong';
+        
+        codeElement.textContent = code;
+        codeDiv.style.display = 'block';
+        showMessage('✅ Code generated! Enter in WhatsApp', false);
+        
+      } catch (error) {
+        console.error('Error:', error);
+        codeElement.textContent = '❌ Error';
+        codeDiv.style.display = 'block';
+        showMessage('Error: ' + (error.response?.data?.error || error.message));
+        
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'PAIRING CODE';
+      }
+    });
+    
+    // Enter key support
+    inputField.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        btn.click();
+      }
+    });
+  </script>
+</body>
+
+  </html>
